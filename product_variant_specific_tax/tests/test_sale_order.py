@@ -4,7 +4,7 @@
 from odoo.tests import common
 
 
-class TestSaleOrder(common.SavepointCase):
+class TestSaleOrder(common.TransactionCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
@@ -14,12 +14,25 @@ class TestSaleOrder(common.SavepointCase):
         cls.product_template = cls.env["product.template"]
         cls.res_partner = cls.env["res.partner"]
         cls.account_tax = cls.env["account.tax"]
+        cls.account_tax_group = cls.env["account.tax.group"]
         cls.product_attribute = cls.env["product.attribute"]
+
+        cls.tax_group_std = cls.account_tax_group.create(
+            {
+                "name": "Standard Tax Group",
+            }
+        )
+        cls.tax_group_recycling = cls.account_tax_group.create(
+            {
+                "name": "Recycling Tax Group",
+            }
+        )
 
         cls.account_tax_std = cls.account_tax.create(
             {
                 "name": "Standard Tax",
                 "amount": 5.0,
+                "tax_group_id": cls.tax_group_std.id,
             }
         )
         cls.account_tax_recycling = cls.account_tax.create(
@@ -27,6 +40,7 @@ class TestSaleOrder(common.SavepointCase):
                 "name": "Recycling Tax",
                 "amount_type": "fixed",
                 "amount": 10.0,
+                "tax_group_id": cls.tax_group_recycling.id,
             }
         )
 
@@ -100,13 +114,14 @@ class TestSaleOrder(common.SavepointCase):
             }
         )
 
-        line.product_id_change()
+        # Force recomputation of tax_id
+        line._compute_tax_id()
         self.assertEqual(line.tax_id, self.account_tax_std)
 
         line.product_id = self.product_product_with
-        line.product_id_change()
+        line._compute_tax_id()
         self.assertEqual(line.tax_id, self.account_tax_std | self.account_tax_recycling)
 
         line.product_id = self.product_product_without
-        line.product_id_change()
+        line._compute_tax_id()
         self.assertEqual(line.tax_id, self.account_tax_std)

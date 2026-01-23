@@ -7,7 +7,7 @@ from odoo.tests import common
 class TestSaleOrder(common.SavepointCase):
     @classmethod
     def setUpClass(cls):
-        super(TestSaleOrder, cls).setUpClass()
+        super().setUpClass()
         cls.product_product = cls.env["product.product"]
         cls.sale_order = cls.env["sale.order"]
         cls.sale_order_line = cls.env["sale.order.line"]
@@ -101,14 +101,12 @@ class TestSaleOrder(common.SavepointCase):
         )
 
         line.product_id_change()
-        self.assertEquals(line.tax_id, self.account_tax_std)
+        self.assertEqual(line.tax_id, self.account_tax_std)
 
         line.product_id = self.product_product_with
         line.product_id_change()
-        self.assertEquals(
-            line.tax_id, self.account_tax_std | self.account_tax_recycling
-        )
+        self.assertEqual(line.tax_id, self.account_tax_std | self.account_tax_recycling)
 
         line.product_id = self.product_product_without
         line.product_id_change()
-        self.assertEquals(line.tax_id, self.account_tax_std)
+        self.assertEqual(line.tax_id, self.account_tax_std)
